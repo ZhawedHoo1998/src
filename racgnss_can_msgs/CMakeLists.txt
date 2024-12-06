@@ -1,54 +1,43 @@
-cmake_minimum_required(VERSION 3.0.2)
+cmake_minimum_required(VERSION 3.8)
 project(racgnss_can_msgs)
 
-## Compile as C++11, supported in ROS Kinetic and newer
-add_compile_options(-std=c++11)
+if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+  add_compile_options(-Wall -Wextra -Wpedantic)
+endif()
+
+# find dependencies
+find_package(ament_cmake REQUIRED)
+# uncomment the following section in order to fill in
+# further dependencies manually.
+# find_package(<dependency> REQUIRED)
+find_package(std_msgs REQUIRED)
+find_package(geometry_msgs REQUIRED)
+find_package(rosidl_default_generators REQUIRED)
 
 
-find_package(catkin REQUIRED COMPONENTS
-  geometry_msgs
-  message_generation
-  sensor_msgs
-  std_msgs
-  tf
-)
+rosidl_generate_interfaces(${PROJECT_NAME} 
+      "rac_0x360.msg"
+      "rac_0x361.msg"
+      "rac_0x362.msg"
+      "rac_0x363.msg"
+      "rac_0x364.msg"
+      "rac_0x365.msg"
+      "rac_0x366.msg"
+      DEPENDENCIES std_msgs 
+      )
 
 
- add_message_files(
-   FILES
-   rac_0x360.msg
-   rac_0x361.msg
-   rac_0x362.msg
-   rac_0x363.msg
-   rac_0x364.msg
-   rac_0x365.msg
-   rac_0x366.msg
 
- )
+if(BUILD_TESTING)
+  find_package(ament_lint_auto REQUIRED)
+  # the following line skips the linter which checks for copyrights
+  # comment the line when a copyright and license is added to all source files
+  set(ament_cmake_copyright_FOUND TRUE)
+  # the following line skips cpplint (only works in a git repo)
+  # comment the line when this package is in a git repo and when
+  # a copyright and license is added to all source files
+  set(ament_cmake_cpplint_FOUND TRUE)
+  ament_lint_auto_find_test_dependencies()
+endif()
 
-
-# add_service_files(
-#   FILES
-# )
-
-## Generate actions in the 'action' folder
-# add_action_files(
-#   FILES
-#   Action1.action
-#   Action2.action
-# )
-
-
- generate_messages(
-   DEPENDENCIES
-   geometry_msgs     sensor_msgs   std_msgs
- )
-
-
-catkin_package(
-#  INCLUDE_DIRS include
-#  LIBRARIES robuster_mr_msgs
-#  CATKIN_DEPENDS geometry_msgs message_generation move_base_msgs nav_msgs pcl_msgs sensor_msgs std_msgs tf
-#  DEPENDS system_lib
-)
-
+ament_package()

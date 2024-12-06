@@ -16,10 +16,63 @@
 
 // TODO: 创建全局变量实时更新经纬度数据
 
-CanControl::CanControl()
+CanControl::CanControl() : Node("racgnss_decoder_node")
 {
 	ros::NodeHandle private_node("~");
+	RCLCPP_INFO(this->get_logger(), "Initializing GNSS Driver Node");
+	GNSS_0x360_pub_ = this->create_publisher<racgnss_can_msgs::msg::rac_0x360>("gnss_0x360", 10);
+	GNSS_0x361_pub_ = this->create_publisher<racgnss_can_msgs::msg::rac_0x361>("gnss_0x361", 10);
+	GNSS_0x362_pub_ = this->create_publisher<racgnss_can_msgs::msg::rac_0x362>("gnss_0x362", 10);
+	GNSS_0x363_pub_ = this->create_publisher<racgnss_can_msgs::msg::rac_0x360>("gnss_0x363", 10);
+    GNSS_0x364_pub_ = this->create_publisher<racgnss_can_msgs::msg::rac_0x361>("gnss_0x364", 10);
+    GNSS_0x365_pub_ = this->create_publisher<racgnss_can_msgs::msg::rac_0x362>("gnss_0x365", 10);
+    GNSS_0x366_pub_ = this->create_publisher<racgnss_can_msgs::msg::rac_0x360>("gnss_0x366", 10);
+	current_pos_pub_ = this->create_publisher<sensor_msgs::msg::NavSatFix>("gps", 10);
+
 	
+	打开设备
+	dev_handler_ = socket(PF_CAN, SOCK_RAW, CAN_RAW);
+	if (dev_handler_ < 0) 
+	{
+		RCLCPP_ERROR(">>open can deivce error!");
+		return;
+	}
+    else
+	{
+		RCLCPP_INFO(this->get_logger(), ">>open can deivce success!");
+	}
+
+
+	struct ifreq ifr;
+	
+	std::string can_name("can0");
+
+	strcpy(ifr.ifr_name,can_name.c_str());
+
+	ioctl(dev_handler_,SIOCGIFINDEX, &ifr);
+
+
+    // bind socket to network interface
+	struct sockaddr_can addr;
+	memset(&addr, 0, sizeof(addr));
+	addr.can_family = AF_CAN;
+	addr.can_ifindex = ifr.ifr_ifindex;
+	int ret = ::bind(dev_handler_, reinterpret_cast<struct sockaddr *>(&addr),sizeof(addr));
+	if (ret < 0) 
+	{
+		ROS_ERROR(">>bind dev_handler error!\r\n");
+		return;
+	}
+
+	//创建接收发送数据线程
+	boost::thread recvdata_thread(boost::bind(&CanControl::recvData, this));
+
+    // 创建发布当前位置信息的线程
+    boost::thread publish_thread(boost::bind(&CanControl::publishCurrentPos, this));
+
+	ros::spin(); // ??
+	
+	close(dev_handler_);
 }
 
 
@@ -126,77 +179,14 @@ void CanControl::publishCurrentPos()
     }
 }
 
-void CanControl::run()
-{
-
-	
-	GNSS_0x360_pub_ = nh_.advertise<racgnss_can_msgs::rac_0x360>("gnss_0x360",5);
-	GNSS_0x361_pub_ = nh_.advertise<racgnss_can_msgs::rac_0x361>("gnss_0x361",5);
-	GNSS_0x362_pub_ = nh_.advertise<racgnss_can_msgs::rac_0x362>("gnss_0x362",5);
-	GNSS_0x363_pub_ = nh_.advertise<racgnss_can_msgs::rac_0x363>("gnss_0x363",5);
-	GNSS_0x364_pub_ = nh_.advertise<racgnss_can_msgs::rac_0x364>("gnss_0x364",5);
-	GNSS_0x365_pub_ = nh_.advertise<racgnss_can_msgs::rac_0x365>("gnss_0x365",5);
-	GNSS_0x366_pub_ = nh_.advertise<racgnss_can_msgs::rac_0x366>("gnss_0x366",5);
-
-	current_pos_pub_ = nh_.advertise<sensor_msgs::NavSatFix>("gps",5);
-
-	
-	//打开设备
-	// dev_handler_ = socket(PF_CAN, SOCK_RAW, CAN_RAW);
-	// if (dev_handler_ < 0) 
-	// {
-	// 	ROS_ERROR(">>open can deivce error!");
-	// 	return;
-	// }
-    // else
-	// {
-	// 	ROS_INFO(">>open can deivce success!");
-	// }
-
-
-	// struct ifreq ifr;
-	
-	// std::string can_name("can0");
-
-	// strcpy(ifr.ifr_name,can_name.c_str());
-
-	// ioctl(dev_handler_,SIOCGIFINDEX, &ifr);
-
-
-    // // bind socket to network interface
-	// struct sockaddr_can addr;
-	// memset(&addr, 0, sizeof(addr));
-	// addr.can_family = AF_CAN;
-	// addr.can_ifindex = ifr.ifr_ifindex;
-	// int ret = ::bind(dev_handler_, reinterpret_cast<struct sockaddr *>(&addr),sizeof(addr));
-	// if (ret < 0) 
-	// {
-	// 	ROS_ERROR(">>bind dev_handler error!\r\n");
-	// 	return;
-	// }
-
-	// //创建接收发送数据线程
-	// boost::thread recvdata_thread(boost::bind(&CanControl::recvData, this));
-
-    // 创建发布当前位置信息的线程
-    boost::thread publish_thread(boost::bind(&CanControl::publishCurrentPos, this));
-
-	ros::spin();
-	
-	close(dev_handler_);
-}
 
 
 
-
-
-//主函数
 int main(int argc, char ** argv)
 {
-	ros::init(argc, argv, "racgnss_decoder_node");
-
-	CanControl cancontrol;
-	cancontrol.run();
-
-	return 0;
+  rclcpp::init(argc, argv);
+  auto node = std::make_shared<CanControl>();
+  rclcpp::spin(node);
+  rclcpp::shutdown();
+  return 0;
 }

@@ -2,18 +2,17 @@
 #define __PIDCONTROL_NODE_H__
 
 
-
-#include "ros/ros.h"
+#include <rclcpp/rclcpp.hpp>
 #include "std_msgs/Int32.h"
-#include "racgnss_can_msgs/rac_0x360.h"
-#include "racgnss_can_msgs/rac_0x361.h"
-#include "racgnss_can_msgs/rac_0x362.h"
-#include "racgnss_can_msgs/rac_0x363.h"
-#include "racgnss_can_msgs/rac_0x364.h"
-#include "racgnss_can_msgs/rac_0x365.h"
-#include "racgnss_can_msgs/rac_0x366.h"
+#include "racgnss_can_msgs/msg/rac_0x360.h"
+#include "racgnss_can_msgs/msg/rac_0x361.h"
+#include "racgnss_can_msgs/msg/rac_0x362.h"
+#include "racgnss_can_msgs/msg/rac_0x363.h"
+#include "racgnss_can_msgs/msg/rac_0x364.h"
+#include "racgnss_can_msgs/msg/rac_0x365.h"
+#include "racgnss_can_msgs/msg/rac_0x366.h"
 
-
+#include <vector>
 #include <net/if.h>
 #include <sys/ioctl.h>
 #include <sys/socket.h>
@@ -24,7 +23,7 @@
 #include <string.h>
 #include <unistd.h>
 
-#include <sensor_msgs/NavSatFix.h>
+#include <sensor_msgs/msg/NavSatFix.h>
 
 #include <string>
 
@@ -33,7 +32,7 @@
 
 
 
-class CanControl
+class CanControl : public rclcpp::Node
 {
 public:
 	CanControl();
@@ -41,17 +40,16 @@ public:
 	
 	void run();
 private:
-	ros::NodeHandle nh_;
 
-	ros::Publisher GNSS_0x360_pub_;
-	ros::Publisher GNSS_0x361_pub_;
-	ros::Publisher GNSS_0x362_pub_;
-	ros::Publisher GNSS_0x363_pub_;
-	ros::Publisher GNSS_0x364_pub_;
-	ros::Publisher GNSS_0x365_pub_;
-	ros::Publisher GNSS_0x366_pub_;
+	rclcpp::Publisher<racgnss_can_msgs::msg::rac_0x360>::SharedPtr GNSS_0x360_pub_;
+    rclcpp::Publisher<racgnss_can_msgs::msg::rac_0x361>::SharedPtr GNSS_0x361_pub_;
+    rclcpp::Publisher<racgnss_can_msgs::msg::rac_0x362>::SharedPtr GNSS_0x362_pub_;
+	rclcpp::Publisher<racgnss_can_msgs::msg::rac_0x363>::SharedPtr GNSS_0x363_pub_;
+    rclcpp::Publisher<racgnss_can_msgs::msg::rac_0x364>::SharedPtr GNSS_0x364_pub_;
+    rclcpp::Publisher<racgnss_can_msgs::msg::rac_0x365>::SharedPtr GNSS_0x365_pub_;
+	rclcpp::Publisher<racgnss_can_msgs::msg::rac_0x366>::SharedPtr GNSS_0x366_pub_;
+    rclcpp::Publisher<sensor_msgs::msg::NavSatFix>::SharedPtr current_pos_pub_;
 
-	ros::Publisher current_pos_pub_;
 
 
 	boost::mutex cmd_mutex_;
