@@ -1,0 +1,9 @@
+<!--yhs-->
+<launch>
+
+    <node pkg="racgnss_decoder" type="racgnss_decoder_node" name="radar_decoder_node" output="screen">
+
+    </node>
+
+</launch>
+

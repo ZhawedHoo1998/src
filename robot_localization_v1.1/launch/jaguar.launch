@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<launch>
+
+
+    <!--imu and odometry-->
+    <!-- Local EKF -->
+    <node pkg="robot_localization" type="ekf_localization_node" name="ekf_localization">
+        <rosparam command="load" file="$(find robot_localization)/params/local_ekf.yaml" />
+        <remap from="/odometry/filtered" to="/odometry/filtered/local" />
+    </node>
+
+    <!-- Global EKF  -->
+    <!-- <node pkg="robot_localization" type="ekf_localization_node" name="ekf_localization_global">
+        <rosparam command="load" file="$(find robot_localization)/params/global_ekf.yaml" />
+        <remap from="/odometry/filtered" to="/odometry/filtered/global" />
+    </node> -->
+
+</launch>
